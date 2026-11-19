@@ -12,15 +12,15 @@ module tt_um_ALU4b (
 );
 
     // Operation encoding
-    parameter ADD = 4'0000;
-    parameter SUB = 4'0001;
-    parameter MUL = 4'0010;
-    parameter DIV = 4'0011;
-    parameter AND = 4'0100; // Logical AND     
-    parameter OR  = 4'0101; // Logical OR
-    parameter XOR = 4'0110; // Logical XOR
-    parameter NOT = 4'0111; // Logical NOT (Unary operation)
-    parameter ENC = 4'1000; // Encryption operation
+    parameter ADD = 4'b0000;
+    parameter SUB = 4'b0001;
+    parameter MUL = 4'b0010;
+    parameter DIV = 4'b0011;
+    parameter AND = 4'b0100; // Logical AND     
+    parameter OR  = 4'b0101; // Logical OR
+    parameter XOR = 4'b0110; // Logical XOR
+    parameter NOT = 4'b0111; // Logical NOT (Unary operation)
+    parameter ENC = 4'b1000; // Encryption operation
        
     // Internal signals
     wire [3:0] a = ui_in [7:4];         // Input a
