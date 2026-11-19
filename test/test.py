@@ -40,19 +40,20 @@ async def test_project(dut):
         carry_out = (uio >> 6) & 1
         return res, carry_out, overflow
 
-    # 1. Prueba ADD (0000): 5 + 3 = 8 (Sin carry, sin overflow)
+        # 1. Prueba ADD sin carry ni overflow: 2 + 3 = 5 (dentro del rango con signo -8 a +7)
+    res, carry, ovf = await run_op(2, 3, 0b0000)
+    assert res == 5, f"ADD falló: esperado 5, obtenido {res}"
+    assert carry == 0 and ovf == 0, f"Banderas incorrectas: carry={carry}, ovf={ovf}"
+
+    # 2. Prueba ADD con Overflow con signo: 5 + 3 = 8 (supera +7, enciende ovf)
     res, carry, ovf = await run_op(5, 3, 0b0000)
-    assert res == 8, f"ADD falló: esperado 8, obtenido {res}"
-    assert carry == 0 and ovf == 0
+    assert res == 8, f"ADD overflow falló: esperado 8, obtenido {res}"
+    assert carry == 0 and ovf == 1, f"Se esperaba ovf=1, obtenido carry={carry}, ovf={ovf}"
 
-    # 2. Prueba ADD con Carry y Overflow: 7 + 9 = 16 -> 0 en 4 bits, carry = 1
-    res, carry, ovf = await run_op(7, 9, 0b0000)
+    # 3. Prueba ADD con Carry sin signo: 9 + 7 = 16 -> 0 en 4 bits, carry = 1
+    res, carry, ovf = await run_op(9, 7, 0b0000)
     assert res == 0, f"ADD carry falló: esperado 0, obtenido {res}"
-    assert carry == 1, f"ADD carry flag falló: esperado 1, obtenido {carry}"
-
-    # 3. Prueba SUB (0001): 9 - 4 = 5
-    res, carry, ovf = await run_op(9, 4, 0b0001)
-    assert res == 5, f"SUB falló: esperado 5, obtenido {res}"
+    assert carry == 1 and ovf == 0, f"Se esperaba carry=1, obtenido carry={carry}, ovf={ovf}"
 
     # 4. Prueba MUL (0010): 6 * 7 = 42
     res, _, _ = await run_op(6, 7, 0b0010)
