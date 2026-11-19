@@ -80,19 +80,19 @@ module tt_um_ALU4b (
                     result <= mul_result; //8-bit result
                 end
                 DIV: begin
-                    {4'b0000, div_remainder, div_quotient}; // 8-bit result (remainder: lower 4 bits, quotient: upper 4 bits)
+                    result <= {4'b0000, div_remainder, div_quotient}; // 8-bit result (remainder: lower 4 bits, quotient: upper 4 bits)
                 end
                 AND: begin
-                    {4'b0000, and_result}; // 4-bit result with upper 4 bits set to 0
+                    result <= {4'b0000, and_result}; // 4-bit result with upper 4 bits set to 0
                 end
                 OR: begin
-                    {4'b0000, or_result}; // 4-bit result with upper 4 bits set to 0
+                    result <= {4'b0000, or_result}; // 4-bit result with upper 4 bits set to 0
                 end
                 XOR: begin
-                    {4'b0000, xor_result}; // 4-bit result with upper 4 bits set to 0
+                    result <= {4'b0000, xor_result}; // 4-bit result with upper 4 bits set to 0
                 end
                 NOT: begin
-                    {4'b0000, not_result}; // 4-bit result with upper 4 bits set to 0
+                    result <= {4'b0000, not_result}; // 4-bit result with upper 4 bits set to 0
                 end
                 ENC: begin
                     // Apply encryption to the concatenated input (a and b)
