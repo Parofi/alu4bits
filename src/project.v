@@ -1,27 +1,134 @@
-/*
- * Copyright (c) 2024 Your Name
- * SPDX-License-Identifier: Apache-2.0
- */
-
 `default_nettype none
 
-module tt_um_example (
-    input  wire [7:0] ui_in,    // Dedicated inputs
-    output wire [7:0] uo_out,   // Dedicated outputs
-    input  wire [7:0] uio_in,   // IOs: Input path
-    output wire [7:0] uio_out,  // IOs: Output path
-    output wire [7:0] uio_oe,   // IOs: Enable path (active high: 0=input, 1=output)
-    input  wire       ena,      // always 1 when the design is powered, so you can ignore it
-    input  wire       clk,      // clock
-    input  wire       rst_n     // reset_n - low to reset
+module tt_um_ALU4b (
+    input   wire [7:0]  ui_in,      // Dedicated inputs (a and b)
+    output  wire [7:0]  ou_out,     // Dedicated outputs (result)
+    input   wire [7:0]  uio_in,     // IOs: Input pAth (opcode)
+    output  wire [7:0]  ou_out,     // IOs: Output path (carry_out, overflow)
+    output  wire [7:0]  ou_oe,      // IOs: Enable path (active high: 0=input, 1=output)
+    input   wire        ena,        // always1 when the design is powered, so you can ignore it|
+    input   wire        clk,        // clock
+    input   wire        rst_n     // reset_n  -  low to reset
 );
 
-  // All output pins must be assigned. If not used, assign to 0.
-  assign uo_out  = ui_in + uio_in;  // Example: ou_out is the sum of ui_in and uio_in
-  assign uio_out = 0;
-  assign uio_oe  = 0;
+    // Operation encoding
+    parameter ADD = 4'0000;
+    parameter SUB = 4'0001;
+    parameter MUL = 4'0010;
+    parameter DIV = 4'0011;
+    parameter AND = 4'0100; // Logical AND     
+    parameter OR  = 4'0101; // Logical OR
+    parameter XOR = 4'0110; // Logical XOR
+    parameter NOT = 4'0111; // Logical NOT (Unary operation)
+    parameter ENC = 4'1000; // Encryption operation
+       
+    // Internal signals
+    wire [3:0] a = ui_in [7:4];         // Input a
+    wire [3:0] b = ui_in [3:0];         // Input b
+    wire [3:0] opcode = uio_in[3:0];    // Opcode
+    
+    // Encription parameters
+    parameter [7:0] ENCRYPTION_KEY = 8'hAB;
 
-  // List all unused inputs to prevent warnings
-  wire _unused = &{ena, clk, rst_n, 1'b0};
+    // Internal signals for operations
+    wire [4:0] add_result;          // 5 bits to capture carry/overflow
+    wire [4:0] sub_result;          // 5 bits to capture borrow
+    wire [7:0] mul_result;          // 8 bits for multiplication
+    wire [3:0] div_quotient;
+    wire [3:0] div_remainder;
+    wire [3:0] and_result   = a & b;
+    wire [3:0] or_result    = a | b;
+    wire [3:0] xor_result   = a ^ b;
+    wire [3:0] not_result   = ~a;
+    reg [7:0] result;
+    reg carry_out;
+    reg overflow;
+
+    // Adition
+    assign add_result = a + b;
+
+    // Subtraction
+    assign sub_result = a - b;
+
+    // Multiplication
+    assign add_result = a * b;
+
+    // Division
+    assign div_quotient  = (b != 0) ? a / b :4'b0000;
+    assign div_remainder = (b != 0) ? a % b :4'b0000;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            result <= 8'b00000000;
+            carry_out <= 0;
+            overflow <= 0;
+        end else begin
+            case (opcode)
+                ADD: begin
+                    result <= {4'b0000, add_result[3:0]};    //4-bit result with upper 4 bits set to 0
+                    carry_out <= add_result[4]; // Carry_out
+                    // Overflow detection
+                    overflow <= (a[3] & b[3] & ~add_resut[3]) | (~a[3] & ~b[3] & add_result[3]);
+                end
+                SUB: begin
+                    result <= {4'b0000, sub_result[3:0]};    //4-bit result with upper 4 bits set to 0
+                    carry_out <= ~sub_result[4]; 
+                    // Overflow detection
+                    overflow <= (a[3] & ~b[3] & ~sub_resut[3]) | (~a[3] & b[3] & sub_result[3]);
+                end
+                MUL: begin
+                    result <= mul_result; //8-bit result
+                end
+                DIV: begin
+                    {4'b0000, div_remainder, div_quotient}; // 8-bit result (remainder: lower 4 bits, quotient: upper 4 bits)
+                end
+                AND: begin
+                    {4'b0000, and_result}; // 4-bit result with upper 4 bits set to 0
+                end
+                OR: begin
+                    {4'b0000, or_result}; // 4-bit result with upper 4 bits set to 0
+                end
+                XOR: begin
+                    {4'b0000, xor_result}; // 4-bit result with upper 4 bits set to 0
+                end
+                NOT: begin
+                    {4'b0000, not_result}; // 4-bit result with upper 4 bits set to 0
+                end
+                ENC: begin
+                    // Apply encryption to the concatenated input (a and b)
+                    result <= (a << 4 | b) ^ ENCRYPTION_KEY;
+                end
+                default: begin
+                    result <= 8'b00000000;
+                    carry_out <= 0;
+                    overflow <= 0;
+                end
+            endcase
+        end
+    end
+ 
+    // Assign outputs
+    assign uo_out   =   result;
+    assign uio_out[7]  =   overflow;
+    assign uio_out[6]  =   carry_out;
+    assign uio_out[5]  =   1'b0;
+    assign uio_out[4]  =   1'b0;
+    assign uio_out[3]  =   1'b0;
+    assign uio_out[2]  =   1'b0;;
+    assign uio_out[1]  =   1'b0;
+    assign uio_out[0]  =   1'b0;
+
+    // IO Enable Path
+    assign uio_oe[7]  =   1'b1;
+    assign uio_oe[6]  =   1'b1;
+    assign uio_oe[5]  =   1'b0;
+    assign uio_oe[4]  =   1'b0;
+    assign uio_oe[3]  =   1'b0;
+    assign uio_oe[2]  =   1'b0;
+    assign uio_oe[1]  =   1'b0;
+    assign uio_oe[0]  =   1'b0;
+    
+    wire _unused = &{ena, clk, rst_n, 1'b0};
 
 endmodule
+
