@@ -4,8 +4,8 @@ module tt_um_ALU4b (
     input   wire [7:0]  ui_in,      // Dedicated inputs (a and b)
     output  wire [7:0]  uo_out,     // Dedicated outputs (result)
     input   wire [7:0]  uio_in,     // IOs: Input pAth (opcode)
-    output  wire [7:0]  oiu_out,     // IOs: Output path (carry_out, overflow)
-    output  wire [7:0]  oiu_oe,      // IOs: Enable path (active high: 0=input, 1=output)
+    output  wire [7:0]  uio_out,     // IOs: Output path (carry_out, overflow)
+    output  wire [7:0]  uio_oe,      // IOs: Enable path (active high: 0=input, 1=output)
     input   wire        ena,        // always1 when the design is powered, so you can ignore it|
     input   wire        clk,        // clock
     input   wire        rst_n     // reset_n  -  low to reset
@@ -51,7 +51,7 @@ module tt_um_ALU4b (
     assign sub_result = a - b;
 
     // Multiplication
-    assign add_result = a * b;
+    assign mul_result = a * b;
 
     // Division
     assign div_quotient  = (b != 0) ? a / b :4'b0000;
@@ -80,7 +80,7 @@ module tt_um_ALU4b (
                     result <= mul_result; //8-bit result
                 end
                 DIV: begin
-                    result <= {4'b0000, div_remainder, div_quotient}; // 8-bit result (remainder: lower 4 bits, quotient: upper 4 bits)
+                    result <= {div_remainder, div_quotient}; // 8-bit result (remainder: lower 4 bits, quotient: upper 4 bits)
                 end
                 AND: begin
                     result <= {4'b0000, and_result}; // 4-bit result with upper 4 bits set to 0
@@ -128,7 +128,8 @@ module tt_um_ALU4b (
     assign uio_oe[1]  =   1'b0;
     assign uio_oe[0]  =   1'b0;
     
-    wire _unused = &{ena, clk, rst_n, 1'b0};
+    //wire _unused = &{ena, clk, rst_n, 1'b0};
+    wire _unused = &{ena, uio_in[7:4], 1'b0};
 
 endmodule
 
