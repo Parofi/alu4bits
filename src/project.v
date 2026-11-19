@@ -68,13 +68,13 @@ module tt_um_ALU4b (
                     result <= {4'b0000, add_result[3:0]};    //4-bit result with upper 4 bits set to 0
                     carry_out <= add_result[4]; // Carry_out
                     // Overflow detection
-                    overflow <= (a[3] & b[3] & ~add_resut[3]) | (~a[3] & ~b[3] & add_result[3]);
+                    overflow <= (a[3] & b[3] & ~add_result[3]) | (~a[3] & ~b[3] & add_result[3]);
                 end
                 SUB: begin
                     result <= {4'b0000, sub_result[3:0]};    //4-bit result with upper 4 bits set to 0
                     carry_out <= ~sub_result[4]; 
                     // Overflow detection
-                    overflow <= (a[3] & ~b[3] & ~sub_resut[3]) | (~a[3] & b[3] & sub_result[3]);
+                    overflow <= (a[3] & ~b[3] & ~sub_result[3]) | (~a[3] & b[3] & sub_result[3]);
                 end
                 MUL: begin
                     result <= mul_result; //8-bit result
